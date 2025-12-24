@@ -1,0 +1,48 @@
+version: '3.8'
+
+services:
+  rabbitmq:
+    image: rabbitmq:3-management
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "check_port_connectivity"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  dashboard:
+    build: .
+  
+    command: python streaming_service/app.py 
+    ports:
+      - "5000:5000"
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+    environment:
+      - RABBITMQ_HOST=rabbitmq
+
+  engine:
+      build: .
+      command: python detection_service/main.py
+      deploy:
+        resources:
+          limits:
+            memory: 2G  
+      depends_on:
+        rabbitmq:
+          condition: service_healthy
+      environment:
+        - RABBITMQ_HOST=rabbitmq
+
+  reader:
+    build: .
+    
+    command: python frame_reader_service/reader.py
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+    environment:
+      - RABBITMQ_HOST=rabbitmq

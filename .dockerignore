@@ -1,0 +1,11 @@
+
+venv/
+.env/
+**/__pycache__/
+*.pyc
+.vscode/
+.idea/
+violations_images/*.jpg
+violations.db
+.DS_Store
+Thumbs.db
